@@ -1,0 +1,12 @@
+name = "grid-flex-sankey"
+main = "worker.js"
+compatibility_date = "2026-07-01"
+
+[vars]
+GITHUB_OWNER = "net-flex"
+GITHUB_REPO = "grid-flex"
+
+# GITHUB_TOKEN and TRIGGER_SECRET are NOT set here — they're secrets.
+# Set them after first deploy with:
+#   wrangler secret put GITHUB_TOKEN
+#   wrangler secret put TRIGGER_SECRET

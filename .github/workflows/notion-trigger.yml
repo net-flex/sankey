@@ -1,0 +1,30 @@
+name: Notion-triggered report
+
+on:
+  repository_dispatch:
+    types: [notion-trigger]   # must match the event_type sent by the Worker
+
+jobs:
+  run-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Run script
+        run: python sankey.py
+
+          # <-- replace output.html with whatever filename your script writes
+      - name: Prepare output folder
+        run: |
+           mkdir -p _site
+           cp value_sankey.html _site/index.html
+
+      # <-- replace YOUR-PAGES-PROJECT-NAME with the name you gave the
+      # Pages project when you created it (see ACCESS_SETUP.md)
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy _site --project-name=grid-flex-sankey
