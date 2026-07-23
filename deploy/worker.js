@@ -51,7 +51,7 @@ export default {
         Authorization: `Bearer ${env.GITHUB_TOKEN}`,
         Accept: "application/vnd.github+json",
         "Content-Type": "application/json",
-        "User-Agent": flex-sense-sankey",
+        "User-Agent": "flex-sense-sankey",
       },
       body: JSON.stringify({
         event_type: "notion-trigger", // must match the workflow's `types:` list
