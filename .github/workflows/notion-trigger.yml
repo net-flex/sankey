@@ -11,19 +11,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          python-version: "3.13"   # <-- match whatever version you use locally
+          enable-cache: true
 
-      - name: Create venv and install dependencies
-        run: |
-          python -m venv .venv
-#            .venv/bin/pip install --upgrade pip
+      # Installs exactly what's pinned in uv.lock; --locked fails the build
+      # if the lock file is out of date rather than silently re-resolving it
+      - name: Install dependencies
+        run: uv sync --locked
 
-      # <-- replace with the actual path to your script
       - name: Run script
-        run: .venv/bin/python sankey.py
+        run: uv run python sankey.py
 
           # <-- replace output.html with whatever filename your script writes
       - name: Prepare output folder
