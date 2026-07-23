@@ -22,7 +22,7 @@ jobs:
         run: uv sync --locked
 
       - name: Run script
-        run: uv run python sankey.py
+        run: uv run sankey
 
           # <-- replace output.html with whatever filename your script writes
       - name: Prepare output folder
