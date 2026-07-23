@@ -23,6 +23,8 @@ jobs:
 
       - name: Run script
         run: uv run sankey
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
 
           # <-- replace output.html with whatever filename your script writes
       - name: Prepare output folder
