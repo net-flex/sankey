@@ -78,7 +78,7 @@ export default {
 </style></head>
 <body>
   <div class="card">
-    <h1>✅ Report queued</h1>
+    <h1>✅ Sankey queued</h1>
     <p>The workflow is running now. You can close this tab —<br>
        the updated report will appear in Notion in about a minute.</p>
   </div>
