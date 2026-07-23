@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-sankey = "sankey_diagram:make_figure"
+sankey = "sankey.sankey_diagram:make_figure"
 
 [build-system]
 requires = ["uv_build>=0.11.26,<0.12.0"]
