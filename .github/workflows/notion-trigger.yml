@@ -16,13 +16,14 @@ jobs:
         with:
           python-version: "3.13"   # <-- match whatever version you use locally
 
-#      - name: Create venv and install dependencies
-#        run: |
-#          python -m venv .venv
+      - name: Create venv and install dependencies
+        run: |
+          python -m venv .venv
+#            .venv/bin/pip install --upgrade pip
 
       # <-- replace with the actual path to your script
       - name: Run script
-        run: .venv/Scripts/python sankey.py
+        run: .venv/bin/python sankey.py
 
           # <-- replace output.html with whatever filename your script writes
       - name: Prepare output folder
