@@ -11,8 +11,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"   # <-- match whatever version you use locally
+
+#      - name: Create venv and install dependencies
+#        run: |
+#          python -m venv .venv
+
+      # <-- replace with the actual path to your script
       - name: Run script
-        run: python sankey.py
+        run: .venv/Scripts/python sankey.py
 
           # <-- replace output.html with whatever filename your script writes
       - name: Prepare output folder
