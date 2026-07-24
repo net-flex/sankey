@@ -4,9 +4,16 @@ on:
   repository_dispatch:
     types: [notion-trigger]   # must match the event_type sent by the Worker
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   run-and-publish:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -34,9 +41,17 @@ jobs:
 
       # <-- replace YOUR-PAGES-PROJECT-NAME with the name you gave the
       # Pages project when you created it (see ACCESS_SETUP.md)
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+      # - name: Deploy to Cloudflare Pages
+      #   uses: cloudflare/wrangler-action@v3
+      #   with:
+      #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      #     command: pages deploy _site --project-name=flex-sense-sankey
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy _site --project-name=flex-sense-sankey
+          path: _site
+ 
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
