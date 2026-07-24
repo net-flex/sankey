@@ -8,7 +8,7 @@ GOOGLE_SHEET_ID = "1lsujljioMTZ6yPSuZV3ddWvFWKfbytl9A2K4AWJ9DsE"
 
 # Set NOTION_DATABASE_ID here (or pass database_id= to from_notion) and export
 # NOTION_TOKEN in the environment before using the Notion source.
-NOTION_DATABASE_ID = "3a6f62e9446280ef9305c136f374523f"
+NOTION_DATABASE_ID = "e6474de3d33b492ca4ec92aa14faedb9"  #"3a6f62e9446280ef9305c136f374523f"
 NOTION_VERSION = "2022-06-28"
 
 
