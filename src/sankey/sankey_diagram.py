@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -70,6 +71,27 @@ def from_notion(database_id: str = None) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def notion_database_name(database_id: str = None) -> str:
+    """Fetch a Notion database's title (its name). Needs NOTION_TOKEN + access."""
+    database_id = database_id or NOTION_DATABASE_ID
+    token = os.environ["NOTION_TOKEN"]
+    url = f"https://api.notion.com/v1/databases/{database_id}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Notion-Version": NOTION_VERSION,
+    }
+    resp = requests.get(url, headers=headers)
+    resp.raise_for_status()
+    title = resp.json().get("title", [])
+    return "".join(part.get("plain_text", "") for part in title).strip()
+
+
+def slugify(name: str) -> str:
+    """Path-friendly form of a name, e.g. 'claude mapping' -> 'claude-mapping'."""
+    slug = re.sub(r"[^a-z0-9]+", "-", (name or "").lower()).strip("-")
+    return slug or "sankey"
+
+
 def make_figure(source: str = "notion", gid: int = 0, database_id: str = None):
     if source == "notion":
         df = from_notion(database_id)
@@ -138,3 +160,13 @@ def main() -> None:
     )
     args = parser.parse_args()
     make_figure(source=args.source, gid=args.gid, database_id=args.database_id)
+
+    # Emit a URL-friendly slug from the Notion database name, so the published
+    # page reads /sankey/<database-name>/ rather than /<database-id>/. The
+    # workflow reads db_slug.txt for the output folder name.
+    if args.source == "notion":
+        name = notion_database_name(args.database_id)
+        slug = slugify(name)
+        with open("db_slug.txt", "w", encoding="utf-8") as fh:
+            fh.write(slug)
+        print(f"database name: {name!r} -> slug: {slug!r}")
