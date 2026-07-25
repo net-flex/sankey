@@ -1,3 +1,4 @@
+import argparse
 import os
 
 import pandas as pd
@@ -6,9 +7,11 @@ import requests
 
 GOOGLE_SHEET_ID = "1lsujljioMTZ6yPSuZV3ddWvFWKfbytl9A2K4AWJ9DsE"
 
-# Set NOTION_DATABASE_ID here (or pass database_id= to from_notion) and export
-# NOTION_TOKEN in the environment before using the Notion source.
-NOTION_DATABASE_ID = "e6474de3d33b492ca4ec92aa14faedb9"  #"3a6f62e9446280ef9305c136f374523f"
+# Default/fallback database, used only when no id is passed in. Override per run
+# via the NOTION_DATABASE_ID env var or a CLI arg (`uv run sankey <database_id>`).
+# The Notion integration behind NOTION_TOKEN must be connected to whichever
+# database you point at, or the API returns 404.
+NOTION_DATABASE_ID = "3a6f62e9446280ef9305c136f374523f"  # the original "Stakeholders" DB
 NOTION_VERSION = "2022-06-28"
 
 
@@ -99,5 +102,39 @@ def make_figure(source: str = "notion", gid: int = 0, database_id: str = None):
     )
 
     # Export options
-    fig.write_html("value_sankey.html")  # Interactive web version
+    fig.write_html("value_sankey.html", include_plotlyjs="cdn")  # small HTML (plotly from CDN)
     fig.write_image("value_sankey.png")  # Static image
+
+
+def main() -> None:
+    """Entry point (`uv run sankey [database_id] [--source ...] [--gid ...]`).
+
+    The database id resolves as: CLI arg -> $NOTION_DATABASE_ID -> the module
+    default (in from_notion). This is how the GitHub Action passes the id
+    through from the Notion link -> Worker -> repository_dispatch payload.
+    """
+    parser = argparse.ArgumentParser(
+        prog="sankey",
+        description="Build a Sankey diagram from a Notion database (or a Google Sheet).",
+    )
+    parser.add_argument(
+        "database_id",
+        nargs="?",
+        default=os.environ.get("NOTION_DATABASE_ID"),
+        help="Notion database id to render. Defaults to $NOTION_DATABASE_ID, "
+             "then the module default. Ignored when --source=sheets.",
+    )
+    parser.add_argument(
+        "--source",
+        choices=("notion", "sheets"),
+        default="notion",
+        help="Where to read Source/Target/Weight rows from (default: notion).",
+    )
+    parser.add_argument(
+        "--gid",
+        type=int,
+        default=0,
+        help="Google Sheet tab gid, used when --source=sheets (default: 0).",
+    )
+    args = parser.parse_args()
+    make_figure(source=args.source, gid=args.gid, database_id=args.database_id)

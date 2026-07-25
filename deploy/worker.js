@@ -43,6 +43,10 @@ export default {
       return new Response("Unauthorized", { status: 401 });
     }
 
+    // Optional: which Notion database to render, from ?db=<database_id>.
+    // Falls through to the script's default database when absent.
+    const db = url.searchParams.get("db");
+
     const dispatchUrl = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/dispatches`;
 
     const githubResponse = await fetch(dispatchUrl, {
@@ -55,6 +59,9 @@ export default {
       },
       body: JSON.stringify({
         event_type: "notion-trigger", // must match the workflow's `types:` list
+        // Pass the database id through to the workflow as
+        // github.event.client_payload.database_id (empty payload => default DB).
+        client_payload: db ? { database_id: db } : {},
       }),
     });
 

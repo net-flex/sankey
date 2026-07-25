@@ -4,16 +4,23 @@ on:
   repository_dispatch:
     types: [notion-trigger]   # must match the event_type sent by the Worker
 
+# Persist the generated diagrams (commit back) and deploy them to GitHub Pages.
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
+
+# Serialise runs so concurrent refreshes don't race on the push or the deploy.
+concurrency:
+  group: sankey-pages
+  cancel-in-progress: false
 
 jobs:
   run-and-publish:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -32,26 +39,44 @@ jobs:
         run: uv run sankey
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          # Which database to render, forwarded by the Worker (empty => default).
+          NOTION_DATABASE_ID: ${{ github.event.client_payload.database_id }}
 
-          # <-- replace output.html with whatever filename your script writes
-      - name: Prepare output folder
+      - name: Place this database's diagram under site/<db>/
         run: |
-           mkdir -p _site
-           cp value_sankey.html _site/index.html
+          DB="${{ github.event.client_payload.database_id }}"
+          DB="${DB:-default}"
+          mkdir -p "site/$DB"
+          cp value_sankey.html "site/$DB/index.html"
+          [ -f value_sankey.png ] && cp value_sankey.png "site/$DB/sankey.png" || true
+          # Rebuild a simple landing page listing every diagram.
+          {
+            echo '<!doctype html><meta charset="utf-8"><title>Sankey diagrams</title>'
+            echo '<h1>Sankey diagrams</h1><ul>'
+            for d in site/*/; do
+              n="$(basename "$d")"
+              [ "$n" = "*" ] && continue
+              echo "<li><a href=\"$n/\">$n</a></li>"
+            done
+            echo '</ul>'
+          } > site/index.html
 
-      # <-- replace YOUR-PAGES-PROJECT-NAME with the name you gave the
-      # Pages project when you created it (see ACCESS_SETUP.md)
-      # - name: Deploy to Cloudflare Pages
-      #   uses: cloudflare/wrangler-action@v3
-      #   with:
-      #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      #     accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      #     command: pages deploy _site --project-name=flex-sense-sankey
+      - name: Commit diagrams (persist across runs)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add site
+          git commit -m "sankey: refresh ${{ github.event.client_payload.database_id || 'default' }}" || echo "no changes to commit"
+          git push
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
- 
+          path: site
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

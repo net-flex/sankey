@@ -3,3 +3,5 @@
 /package-lock.json
 /node_modules/
 /notion_token
+__pycache__/
+*.pyc
